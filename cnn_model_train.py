@@ -8,20 +8,12 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 from tensorflow.keras.utils import to_categorical
 import json
+from load_images import load_and_preprocess_images
 
-# Load gestures
-gestures = os.listdir('gestures/')
-images = []
-labels = []
-label_map = {gesture: idx for idx, gesture in enumerate(gestures)}
+# Importing the load_images file function preprocessed images
+gestures_dir = 'gestures/'
+images, labels, label_map = load_and_preprocess_images(gestures_dir)
 
-for gesture in gestures:
-    gesture_path = os.path.join('gestures', gesture)
-    for img_name in os.listdir(gesture_path):
-        img = cv2.imread(os.path.join(gesture_path, img_name), cv2.IMREAD_GRAYSCALE)
-        img = cv2.resize(img, (50, 50))
-        images.append(img)
-        labels.append(label_map[gesture])
 
 # Save the label map to a file
 with open('label_map.json', 'w') as f:
@@ -35,8 +27,8 @@ images, labels = shuffle(images, labels)
 X_train, X_test, y_train, y_test = train_test_split(images, labels, test_size=0.2, random_state=42)
 
 # Convert labels to categorical
-y_train = to_categorical(y_train, num_classes=len(gestures))
-y_test = to_categorical(y_test, num_classes=len(gestures))
+y_train = to_categorical(y_train, num_classes=len(label_map))
+y_test = to_categorical(y_test, num_classes=len(label_map))
 
 # Define the model
 model = Sequential([
@@ -47,7 +39,7 @@ model = Sequential([
     Flatten(),
     Dense(128, activation='relu'),
     Dropout(0.5),
-    Dense(len(gestures), activation='softmax')
+    Dense(len(label_map), activation='softmax')
 ])
 
 # Compile the model
